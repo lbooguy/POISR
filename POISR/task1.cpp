@@ -15,7 +15,7 @@ void onTrackbarSlide(int pos, void*) {
 		g_run = 1;
 	g_dontset = 0;
 }
-//sadasda  fghgfhgfhhhfg
+
 int main(int argc, char** argv) {
 	cv::namedWindow("Example2_4", cv::WINDOW_AUTOSIZE);
 	g_cap.open("C:/Users/USER/Videos/video.mp4");
