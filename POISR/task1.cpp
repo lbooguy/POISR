@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
 		{
 			g_run = 1; cout << "Frame-by-frame mode, run = " << g_run << endl;
 		}
-		if (c == 'r') // непрерывный режим
+		if (c == 'r')
 		{
 			g_run = -1; cout << "Continuos mode, run = " << g_run << endl;
 		}
