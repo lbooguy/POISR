@@ -5,7 +5,7 @@
 
 using namespace std;
 int g_slider_position = 0;
-int g_run = 1, g_dontset = 0; // начинаем в режиме покадрового просмотра
+int g_run = 1, g_dontset = 0; 
 cv::VideoCapture g_cap;
 
 void onTrackbarSlide(int pos, void*) {
@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
 	int frames = (int)g_cap.get(cv::CAP_PROP_FRAME_COUNT);
 	int tmpw = (int)g_cap.get(cv::CAP_PROP_FRAME_WIDTH);
 	int tmph = (int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT);
-	cout << "¬ виде " << frames << " кадров размером("
+	cout << "In the form of " << frames << " frames in size("
 		<< tmpw << ", " << tmph << ")." << endl;
 	cv::createTrackbar("Position", "source", &g_slider_position, frames,
 		onTrackbarSlide);
@@ -51,13 +51,13 @@ int main(int argc, char** argv) {
 			g_run -= 1;
 		}
 		char c = (char)cv::waitKey(10);
-		if (c == 's') // покадровый режим
+		if (c == 's') 
 		{
-			g_run = 1; cout << "ѕокадровый режим, run = " << g_run << endl;
+			g_run = 1; cout << "Frame-by-frame mode, run = " << g_run << endl;
 		}
 		if (c == 'r') // непрерывный режим
 		{
-			g_run = -1; cout << "Ќепрерывный режим, run = " << g_run << endl;
+			g_run = -1; cout << "Continuos mode, run = " << g_run << endl;
 		}
 		if (c == 27)
 			break;
