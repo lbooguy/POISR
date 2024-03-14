@@ -7,8 +7,6 @@ using namespace std;
 int g_slider_position = 0;
 int g_run = 1, g_dontset = 0; // начинаем в режиме покадрового просмотра
 cv::VideoCapture g_cap;
-cv::VideoCapture g_gray;
-cv::VideoCapture g_canny;
 
 void onTrackbarSlide(int pos, void*) {
 	g_cap.set(cv::CAP_PROP_POS_FRAMES, pos);
@@ -21,6 +19,14 @@ int main(int argc, char** argv) {
 	cv::namedWindow("source", cv::WINDOW_NORMAL);
 	cv::namedWindow("Canny", cv::WINDOW_NORMAL);
 	g_cap.open("C:/Users/USER/Videos/video.mp4");
+	//g_cap.open(0);
+	double fps = g_cap.get(cv::CAP_PROP_FPS);
+	cv::Size size(
+		(int)g_cap.get(cv::CAP_PROP_FRAME_WIDTH),
+		(int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT)
+	);
+	cv::VideoWriter writer;
+	writer.open("video_Canny.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
 	int frames = (int)g_cap.get(cv::CAP_PROP_FRAME_COUNT);
 	int tmpw = (int)g_cap.get(cv::CAP_PROP_FRAME_WIDTH);
 	int tmph = (int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT);
@@ -41,6 +47,7 @@ int main(int argc, char** argv) {
 			cv::Canny(frame, frame, 10, 100, 3, true);
 			cv::imshow("Canny", frame);
 			cv::resizeWindow("Canny", 500, 500);
+			writer << frame;
 			g_run -= 1;
 		}
 		char c = (char)cv::waitKey(10);
