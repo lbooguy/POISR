@@ -39,7 +39,7 @@ double source_video() {
 	cv::createTrackbar("Position", "source", &g_slider_position, frames,
 		onTrackbarSlide);
 	cv::Mat frame;
-	
+	cv::Mat frame_gray;
 	for (;;) {
 		if (g_run != 0) {
 			count++;
@@ -48,16 +48,14 @@ double source_video() {
 			g_dontset = 1;
 			cv::setTrackbarPos("Position", "source", current_pos);
 			cv::imshow("source", frame);
-
+			
 			cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
-			cv::Canny(frame, frame, 130, 230, 3, true);
-			cv::imshow("Canny", frame);
-			f.push_back(frame);
-			/*
-			if (k==1){
-				std::cout << "frame=" << frame << std::endl;
-				k = 0;
-			}*/
+			cv::Canny(frame, frame_gray, 130, 230, 3, true);
+			cv::imshow("Canny", frame_gray);
+
+		
+			//std::cout << "f  =" << frame_gray.at<uchar>(cv::Point(0, 0)) << std::endl;
+			f.push_back(frame_gray);
 			
 			writer << frame;
 			g_run -= 1;
@@ -80,7 +78,33 @@ double source_video() {
 
 int main(int argc, char** argv) {
 	std::cout <<"Source video: Average time processing of frame  =" <<source_video()<<"ms" << std::endl;
-	std::cout << "f[0].size()  =" << f[0].size() << std::endl;
+
+
+	/*
+	for (int row = 0; row < f[0].rows; ++row) {
+		uchar* p = f[0].ptr(row); //pointer p points to the first place of each row
+		for (int col = 0; col < f[0].cols; ++col) {
+			*p++;
+			if (p[row] != 0) {
+			}
+
+		}
+	}*/
+	std::ofstream out;  
+	out.open("pix.txt");
+	
+	//std::cout << "f  =" << f[0].data << std::endl;
+	for (int i = 0; i < f[0].rows; i++) {
+		for (int j = 0; j < f[0].cols; j++) {
+			if (f[0].at<uchar>(i, j) == 0) {
+				if (out.is_open())
+				{
+					out << int(f[0].at<uchar>(i, j)) <<'|' << i << ',' << j << std::endl;
+				}
+			}
+		}
+	}
+	
 	/*
 	for (cv::Mat : f[0])
 		cout << n << "\t";
