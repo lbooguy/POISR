@@ -82,7 +82,7 @@ double source_video() {
 		(int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT)
 	);
 	cv::VideoWriter writer;
-	writer.open("video_Canny_source.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
+	writer.open("video_edges.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
 	int frames = (int)g_cap.get(cv::CAP_PROP_FRAME_COUNT);
 	int tmpw = (int)g_cap.get(cv::CAP_PROP_FRAME_WIDTH);
 	int tmph = (int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT);
@@ -135,20 +135,21 @@ double source_video() {
 				0);
 			cv::Point c3(0, prev_point_up), c4(1600, prev_point_up);
 
-			cv::line(frame, c1, c2, cv::Scalar(255, 0, 0),
+			cv::line(frame, c1, c2, cv::Scalar(0, 255, 0),
 				thickness, cv::LINE_8);
-			cv::line(frame, c3, c4, cv::Scalar(255, 0, 0),
+			cv::line(frame, c3, c4, cv::Scalar(0, 255, 0),
 				thickness, cv::LINE_8);
 			
-			//std::cout << "f  =" << frame_Canny << std::endl;
+			cv::Point c5(0, prev_point_up), c6(0, prev_point_down);
+			cv::Point c7(1599, prev_point_up), c8(1599, prev_point_down);
+			cv::line(frame, c5, c6, cv::Scalar(0, 255, 0),
+				thickness, cv::LINE_8);
+			cv::line(frame, c7, c8, cv::Scalar(0, 255, 0),
+				thickness, cv::LINE_8);
 
 
 			cv::imshow("source", frame);
-			cv::imshow("Canny", frame_Canny);
-
-		
-			//std::cout << "f  =" << frame_gray.at<uchar>(cv::Point(0, 0)) << std::endl;
-			f.push_back(frame_gray);
+			//cv::imshow("Canny", frame_Canny);
 			
 			writer << frame;
 			g_run -= 1;
@@ -170,32 +171,6 @@ double source_video() {
 }
 
 int main(int argc, char** argv) {
-	std::cout <<"Source video: Average time processing of frame  =" <<source_video()<<"ms" << std::endl;
-
-
-	/*
-	for (int row = 0; row < f[0].rows; ++row) {
-		uchar* p = f[0].ptr(row); //pointer p points to the first place of each row
-		for (int col = 0; col < f[0].cols; ++col) {
-			*p++;
-			if (p[row] != 0) {
-			}
-
-		}
-	}*/
-	std::ofstream out;  
-	out.open("pix.txt");
-	
-	//std::cout << "f  =" << f[0].data << std::endl;
-	for (int i = 0; i < f[0].rows; i++) {
-		for (int j = 0; j < f[0].cols; j++) {
-			if (f[0].at<uchar>(i, j) == 0) {
-				if (out.is_open())
-				{
-					out << int(f[0].at<uchar>(i, j)) <<'|' << i << ',' << j << std::endl;
-				}
-			}
-		}
-	}
+	source_video();
 
 }
