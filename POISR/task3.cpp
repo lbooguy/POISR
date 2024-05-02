@@ -40,6 +40,8 @@ double source_video() {
 		onTrackbarSlide);
 	cv::Mat frame;
 	cv::Mat frame_gray;
+	cv::Mat frame_Canny;
+	vector< vector< cv::Point> > edges;
 	for (;;) {
 		if (g_run != 0) {
 			count++;
@@ -47,11 +49,27 @@ double source_video() {
 			int current_pos = (int)g_cap.get(cv::CAP_PROP_POS_FRAMES);
 			g_dontset = 1;
 			cv::setTrackbarPos("Position", "source", current_pos);
+			cv::Point p1(530, 0), p2(530, 1200);
+			cv::Point p3(1060, 0), p4(1060, 1200);
+			int thickness = 2;
+			// Line drawn using 8 connected 
+			// Bresenham algorithm 
+			/*
+			cv::line(frame, p1, p2, cv::Scalar(255, 0, 0),
+				thickness, cv::LINE_8);
+			cv::line(frame, p3, p4, cv::Scalar(255, 0, 0),
+				thickness, cv::LINE_8);
+				*/
+			cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);
+			cv::Canny(frame_gray, frame_Canny, 130, 230, 3, true);
+
+			cv::findContours(frame_Canny, edges, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+			cv::drawContours(frame, edges, -1, (157, 155, 0), 3);
 			cv::imshow("source", frame);
 			
-			cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
-			cv::Canny(frame, frame_gray, 130, 230, 3, true);
-			cv::imshow("Canny", frame_gray);
+			
+			
+			cv::imshow("Canny", frame_Canny);
 
 		
 			//std::cout << "f  =" << frame_gray.at<uchar>(cv::Point(0, 0)) << std::endl;
@@ -104,21 +122,5 @@ int main(int argc, char** argv) {
 			}
 		}
 	}
-	
-	/*
-	for (cv::Mat : f[0])
-		cout << n << "\t";
-		
-	std::cout << "f[0]  =" << f[0] << std::endl;
-	
 
-	std::ofstream out;          // поток для записи
-	out.open("frames.txt");      // открываем файл для записи
-	if (out.is_open())
-	{
-		out << f[0] << std::endl;
-	}
-	out.close();
-	std::cout << "File has been written" << std::endl;
-	*/
 }
