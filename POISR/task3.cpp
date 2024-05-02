@@ -15,6 +15,58 @@ void onTrackbarSlide(int pos, void*) {
 		g_run = 1;
 	g_dontset = 0;
 }
+
+
+int find_point(cv::Mat frame_Canny,
+	int prev_point,
+	int x0, int y0,
+	int x1, int y1,
+	int mode) {
+	if (mode == 1) {
+		int step = 10;
+		int y_out = 0;
+		y0 = prev_point - 10;
+		for (int y = y0; y < y1; y = y + step) {
+			for (int x = x0; x < x1; x++) {
+				auto check = frame_Canny.at<uchar>(y, x);
+				if (check != '\0') {
+					for (int y_t = y - 10; y_t < y; y_t++) {
+						for (int x_t = x0; x_t < x1; x_t++) {
+							int check1 = frame_Canny.at<uchar>(y_t, x_t);
+							if (check1 != '\0') {
+								return y_t;
+							}
+						}
+					}
+					
+				}
+			}
+		}	
+	}
+
+	if (mode != 1) {
+		int step = 10;
+		int y_out = 0;
+		for (int y = y1; y > y0; y = y - step) {
+			for (int x = x0; x < x1; x++) {
+				auto check = frame_Canny.at<uchar>(y, x);
+				if (check != '\0') {
+					for (int y_t = y; y_t > y - 10; y_t--) {
+						for (int x_t = x0; x_t < x1; x_t++) {
+							int check1 = frame_Canny.at<uchar>(y_t, x_t);
+							if (check1 != '\0') {
+								return y_t;
+							}
+						}
+					}
+
+				}
+			}
+		}
+	}
+
+}
+
 std::vector<cv::Mat> f;
 double source_video() {
 	cv::namedWindow("source", cv::WINDOW_NORMAL);
@@ -42,6 +94,8 @@ double source_video() {
 	cv::Mat frame_gray;
 	cv::Mat frame_Canny;
 	vector< vector< cv::Point> > edges;
+	int prev_point_up = 0;
+	int prev_point_down = 600;
 	for (;;) {
 		if (g_run != 0) {
 			count++;
@@ -60,15 +114,36 @@ double source_video() {
 			cv::line(frame, p3, p4, cv::Scalar(255, 0, 0),
 				thickness, cv::LINE_8);
 				*/
+			
 			cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);
-			cv::Canny(frame_gray, frame_Canny, 130, 230, 3, true);
+			cv::Canny(frame_gray, frame_Canny, 110, 230, 3, true);
 
 			cv::findContours(frame_Canny, edges, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
-			cv::drawContours(frame, edges, -1, (157, 155, 0), 3);
+
+			cv::drawContours(frame, edges, -1, (0, 0, 255), 3);
+			prev_point_down = find_point(frame_Canny,
+				prev_point_down,
+				530, 600,
+				1060, 1200,
+				1);
+			cv::Point c1(0, prev_point_down), c2(1600, prev_point_down);
+
+			prev_point_up = find_point(frame_Canny,
+				prev_point_up,
+				530, 0,
+				1060, 600,
+				0);
+			cv::Point c3(0, prev_point_up), c4(1600, prev_point_up);
+
+			cv::line(frame, c1, c2, cv::Scalar(255, 0, 0),
+				thickness, cv::LINE_8);
+			cv::line(frame, c3, c4, cv::Scalar(255, 0, 0),
+				thickness, cv::LINE_8);
+			
+			//std::cout << "f  =" << frame_Canny << std::endl;
+
+
 			cv::imshow("source", frame);
-			
-			
-			
 			cv::imshow("Canny", frame_Canny);
 
 		
