@@ -67,10 +67,10 @@ int find_point(cv::Mat frame_Canny,
 
 }
 
-std::vector<cv::Mat> f;
+
 double source_video() {
 	cv::namedWindow("source", cv::WINDOW_NORMAL);
-	cv::namedWindow("Canny", cv::WINDOW_NORMAL);
+	//cv::namedWindow("Canny", cv::WINDOW_NORMAL);
 	time_t start, end;
 	double total_time = 0;
 	int count = 0;
@@ -93,27 +93,33 @@ double source_video() {
 	cv::Mat frame;
 	cv::Mat frame_gray;
 	cv::Mat frame_Canny;
-	vector< vector< cv::Point> > edges;
+	cv::Mat frame_roi;
+	vector<vector<cv::Point>> edges;
+
+	//параметры goodFeaturesToTrack
+	vector<cv::Point2f> corners;
+	//cv::Mat corners;
+	int maxCorners = 23;
+	double qualityLevel = 0.5;
+	double minDistance = 10;
+	
+	
+	//начальные приближения для поиска roi, prev_point_up не используется
 	int prev_point_up = 0;
 	int prev_point_down = 600;
+	
 	for (;;) {
 		if (g_run != 0) {
 			count++;
 			g_cap >> frame; if (frame.empty()) break;
+			
 			int current_pos = (int)g_cap.get(cv::CAP_PROP_POS_FRAMES);
 			g_dontset = 1;
 			cv::setTrackbarPos("Position", "source", current_pos);
 			cv::Point p1(530, 0), p2(530, 1200);
 			cv::Point p3(1060, 0), p4(1060, 1200);
 			int thickness = 2;
-			// Line drawn using 8 connected 
-			// Bresenham algorithm 
-			/*
-			cv::line(frame, p1, p2, cv::Scalar(255, 0, 0),
-				thickness, cv::LINE_8);
-			cv::line(frame, p3, p4, cv::Scalar(255, 0, 0),
-				thickness, cv::LINE_8);
-				*/
+
 
 			cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);
 			cv::Canny(frame_gray, frame_Canny, 130, 230, 3, true);
@@ -147,11 +153,28 @@ double source_video() {
 			cv::line(frame, c7, c8, cv::Scalar(0, 255, 0),
 				thickness, cv::LINE_8);
 
+			cv::Rect roi(0, prev_point_up, 1599, prev_point_down - prev_point_up);//x0, y0, width, height
 
+
+			frame_roi = frame_gray(roi);
+			
+			cv::goodFeaturesToTrack(frame_roi, corners, maxCorners, qualityLevel, minDistance);
+
+			std::cout << "corners = " << corners[0].x << std::endl;
+
+			int radius = 10;
+			int thickness_circle = 5;
+			for (size_t i = 0; i < corners.size(); i++)
+			{	
+				corners[i].y += prev_point_up;
+				cv::circle(frame, corners[i], radius, cv::Scalar(0,255,255), thickness_circle);
+			}
+
+			//cv::imshow("cropped", frame_roi);
 			cv::imshow("source", frame);
 			//cv::imshow("Canny", frame_Canny);
   
-			writer << frame;
+			//writer << frame;
 			g_run -= 1;
 		}
 		char c = (char)cv::waitKey(10);
