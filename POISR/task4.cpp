@@ -38,10 +38,10 @@ int find_point(cv::Mat frame_Canny,
 							}
 						}
 					}
-					
+
 				}
 			}
-		}	
+		}
 	}
 
 	if (mode != 1) {
@@ -114,7 +114,7 @@ double source_video() {
 			cv::line(frame, p3, p4, cv::Scalar(255, 0, 0),
 				thickness, cv::LINE_8);
 				*/
-			
+
 			cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);
 			cv::Canny(frame_gray, frame_Canny, 130, 230, 3, true);
 
@@ -139,7 +139,7 @@ double source_video() {
 				thickness, cv::LINE_8);
 			cv::line(frame, c3, c4, cv::Scalar(0, 255, 0),
 				thickness, cv::LINE_8);
-			
+
 			cv::Point c5(0, prev_point_up), c6(0, prev_point_down);
 			cv::Point c7(1599, prev_point_up), c8(1599, prev_point_down);
 			cv::line(frame, c5, c6, cv::Scalar(0, 255, 0),
@@ -150,7 +150,7 @@ double source_video() {
 
 			cv::imshow("source", frame);
 			//cv::imshow("Canny", frame_Canny);
-			
+  
 			writer << frame;
 			g_run -= 1;
 		}
