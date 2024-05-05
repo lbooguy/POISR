@@ -8,6 +8,7 @@ using namespace std;
 int g_slider_position = 0;
 int g_run = 1, g_dontset = 0;
 cv::VideoCapture g_cap;
+vector<int> corners_number;
 
 void onTrackbarSlide(int pos, void*) {
 	g_cap.set(cv::CAP_PROP_POS_FRAMES, pos);
@@ -82,7 +83,7 @@ double source_video() {
 		(int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT)
 	);
 	cv::VideoWriter writer;
-	writer.open("video_edges.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
+	writer.open("video_taks4_2.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
 	int frames = (int)g_cap.get(cv::CAP_PROP_FRAME_COUNT);
 	int tmpw = (int)g_cap.get(cv::CAP_PROP_FRAME_WIDTH);
 	int tmph = (int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT);
@@ -99,7 +100,7 @@ double source_video() {
 	//параметры goodFeaturesToTrack
 	vector<cv::Point2f> corners;
 	//cv::Mat corners;
-	int maxCorners = 23;
+	int maxCorners = 300;
 	double qualityLevel = 0.5;
 	double minDistance = 10;
 	
@@ -107,6 +108,8 @@ double source_video() {
 	//начальные приближения для поиска roi, prev_point_up не используется
 	int prev_point_up = 0;
 	int prev_point_down = 600;
+	
+
 	
 	for (;;) {
 		if (g_run != 0) {
@@ -158,9 +161,10 @@ double source_video() {
 
 			frame_roi = frame_gray(roi);
 			
+			cv::equalizeHist(frame_roi, frame_roi);
 			cv::goodFeaturesToTrack(frame_roi, corners, maxCorners, qualityLevel, minDistance);
 
-			std::cout << "corners = " << corners[0].x << std::endl;
+			std::cout << "corners = " << corners.size() << std::endl;
 
 			int radius = 10;
 			int thickness_circle = 5;
@@ -170,11 +174,13 @@ double source_video() {
 				cv::circle(frame, corners[i], radius, cv::Scalar(0,255,255), thickness_circle);
 			}
 
-			//cv::imshow("cropped", frame_roi);
+			corners_number.push_back(corners.size());
+
+			cv::imshow("cropped", frame_roi);
 			cv::imshow("source", frame);
 			//cv::imshow("Canny", frame_Canny);
   
-			//writer << frame;
+			writer << frame;
 			g_run -= 1;
 		}
 		char c = (char)cv::waitKey(10);
@@ -196,4 +202,17 @@ double source_video() {
 int main(int argc, char** argv) {
 	source_video();
 
+	std::ofstream out;          
+	out.open("task4_2.txt");      
+	if (out.is_open())
+	{
+		//out << "Frame number, number of corners" << std::endl;
+		for (int i = 0; i < corners_number.size(); i++)
+		{
+			out << i << " " << corners_number[i]<< std::endl;
+		}
+		
+	}
+	out.close();
+	std::cout << "File has been written" << std::endl;
 }
