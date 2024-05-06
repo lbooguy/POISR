@@ -84,7 +84,7 @@ double source_video() {
 		(int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT)
 	);
 	cv::VideoWriter writer;
-	writer.open("video_taks5_2.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
+	writer.open("video_taks5_lines.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
 	int frames = (int)g_cap.get(cv::CAP_PROP_FRAME_COUNT);
 	int tmpw = (int)g_cap.get(cv::CAP_PROP_FRAME_WIDTH);
 	int tmph = (int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT);
@@ -120,6 +120,9 @@ double source_video() {
 	vector<uchar> status;
 	vector<float> err;
 	cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT)+(cv::TermCriteria::EPS), 10, 0.3);
+
+	vector<vector<cv::Point2f>> trajects(maxCorners);
+	
 	
 	bool flag = 1;
 	for (;;) {
@@ -173,14 +176,16 @@ double source_video() {
 				frame_gray_prev = frame_gray.clone();
 				//cv::equalizeHist(frame_roi, frame_roi);
 				cv::goodFeaturesToTrack(frame_roi, corners_prev, maxCorners, qualityLevel, minDistance, cv::noArray(), blockSize, true);
+				//vector<vector<cv::Point2f>> trajects(corners_prev.size());
 				int radius = 10;
 				int thickness_circle = 5;
 				for (size_t i = 0; i < corners_prev.size(); i++)
 				{
 					corners_prev[i].y += prev_point_up;
-					cv::circle(frame, corners_prev[i], radius, cv::Scalar(0, 255, 255), thickness_circle);
+					trajects[i].push_back(corners_prev[i]);
+					//cv::circle(frame, corners_prev[i], radius, cv::Scalar(0, 255, 255), thickness_circle);
 				}
-
+				//trajects.push_back(corners_prev);
 				corners_number.push_back(corners_prev.size());
 				std::cout << "corners = " << corners_prev.size() << std::endl;
 				flag = false;
@@ -188,18 +193,45 @@ double source_video() {
 			else {
 				vector<cv::Point2f> corners_good;
 				cv::calcOpticalFlowPyrLK(frame_gray_prev, frame_gray, corners_prev, corners, status, err, cv::Size(21, 21), 3, criteria);
-				
+				//trajects.push_back(corners);
+
 				//select and vizual
 				int radius = 10;
 				int thickness_circle = 5;
-				
+				auto iter = trajects.cbegin();
+				auto iter_end = trajects.cend();
+
+				vector<vector<cv::Point2f>> trajects_temp;
+				//trajects_temp = trajects;
 				for (uint i = 0; i < status.size(); i++)
 				{
 					if (status[i] && (corners[i].x < 1599 && corners[i].x > 0 && corners[i].y > prev_point_up && corners[i].y < prev_point_down)) {
 						corners_good.push_back(corners[i]);
-						cv::circle(frame, corners[i], radius, cv::Scalar(0, 255, 255), thickness_circle);
+
+						trajects[i].push_back(corners[i]);
+						trajects_temp.push_back(trajects[i]);
+						//cv::line(frame, corners[i], corners_prev[i], cv::Scalar( 255,0,0), 1);
+						//cv::circle(frame, corners[i], radius, cv::Scalar(0, 255, 255), thickness_circle);
+						
+						for (int j = 1; j < trajects[i].size(); j++) {
+							cv::line(frame, trajects[i][j-1], trajects[i][j], cv::Scalar(255, 255, 0), 3);
+						}
 					}
+
+					
+					
 				}
+				//trajects.clear();
+				trajects = trajects_temp;
+				/*
+				for (int i = 0; i < status.size(); i++) {
+					if (!status[i]) {
+
+						
+
+					}
+				}*/
+
 				
 				//upd
 				frame_gray_prev = frame_gray.clone();
@@ -209,15 +241,8 @@ double source_video() {
 
 				corners_number.push_back(corners.size());
 			}
-			
-
-			//std::cout << "corners = " << corners.size() << std::endl;
-
-			
-
-			//cv::imshow("cropped", frame_roi);
+					
 			cv::imshow("source", frame);
-			//cv::imshow("Canny", frame_gray_prev);
 
 			writer << frame;
 			g_run -= 1;
@@ -240,7 +265,7 @@ double source_video() {
 
 int main(int argc, char** argv) {
 	source_video();
-
+	/*
 	std::ofstream out;
 	out.open("task5_2.txt");
 	if (out.is_open())
@@ -253,5 +278,5 @@ int main(int argc, char** argv) {
 
 	}
 	out.close();
-	std::cout << "File has been written" << std::endl;
+	std::cout << "File has been written" << std::endl;*/
 }
