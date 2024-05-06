@@ -1,5 +1,6 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include <opencv2/opencv.hpp>
 #include <iostream>
 #include <fstream>
 #include <chrono>
@@ -72,7 +73,7 @@ int find_point(cv::Mat frame_Canny,
 double source_video() {
 	cv::namedWindow("source", cv::WINDOW_NORMAL);
 	//cv::namedWindow("Canny", cv::WINDOW_NORMAL);
-	time_t start, end;
+
 	double total_time = 0;
 	int count = 0;
 	g_cap.open("C:/Users/USER/Videos/video.mp4");
@@ -94,23 +95,33 @@ double source_video() {
 	cv::Mat frame;
 	cv::Mat frame_gray;
 	cv::Mat frame_Canny;
+
 	cv::Mat frame_roi;
+	cv::Mat frame_roi_prev;
+
+	cv::Mat frame_gray_prev;
 	vector<vector<cv::Point>> edges;
 
 	//параметры goodFeaturesToTrack
 	vector<cv::Point2f> corners;
-	//cv::Mat corners;
-	int maxCorners = 300;
-	double qualityLevel = 0.5;
-	double minDistance = 10;
+	vector<cv::Point2f> corners_prev;
+	
 
+	//cv::Mat corners;
+	int maxCorners = 1000;
+	double qualityLevel = 0.01;
+	double minDistance = 3;
+	int blockSize = 3;
 
 	//начальные приближения для поиска roi, prev_point_up не используется
 	int prev_point_up = 0;
 	int prev_point_down = 600;
 
-
-
+	vector<uchar> status;
+	vector<float> err;
+	cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT)+(cv::TermCriteria::EPS), 10, 0.3);
+	
+	bool flag = 1;
 	for (;;) {
 		if (g_run != 0) {
 			count++;
@@ -119,9 +130,6 @@ double source_video() {
 			int current_pos = (int)g_cap.get(cv::CAP_PROP_POS_FRAMES);
 			g_dontset = 1;
 			cv::setTrackbarPos("Position", "source", current_pos);
-			cv::Point p1(530, 0), p2(530, 1200);
-			cv::Point p3(1060, 0), p4(1060, 1200);
-			int thickness = 2;
 
 
 			cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);
@@ -144,6 +152,7 @@ double source_video() {
 				0);
 			cv::Point c3(0, prev_point_up), c4(1600, prev_point_up);
 
+			int thickness = 2;
 			cv::line(frame, c1, c2, cv::Scalar(0, 255, 0),
 				thickness, cv::LINE_8);
 			cv::line(frame, c3, c4, cv::Scalar(0, 255, 0),
@@ -160,25 +169,54 @@ double source_video() {
 
 
 			frame_roi = frame_gray(roi);
+			if (flag) {
+				frame_gray_prev = frame_gray.clone();
+				cv::equalizeHist(frame_roi, frame_roi);
+				cv::goodFeaturesToTrack(frame_roi, corners_prev, maxCorners, qualityLevel, minDistance, cv::noArray(), blockSize);
+				int radius = 10;
+				int thickness_circle = 5;
+				for (size_t i = 0; i < corners_prev.size(); i++)
+				{
+					corners_prev[i].y += prev_point_up;
+					cv::circle(frame, corners_prev[i], radius, cv::Scalar(0, 255, 255), thickness_circle);
+				}
 
-			cv::equalizeHist(frame_roi, frame_roi);
-			cv::goodFeaturesToTrack(frame_roi, corners, maxCorners, qualityLevel, minDistance);
-
-			std::cout << "corners = " << corners.size() << std::endl;
-
-			int radius = 10;
-			int thickness_circle = 5;
-			for (size_t i = 0; i < corners.size(); i++)
-			{
-				corners[i].y += prev_point_up;
-				cv::circle(frame, corners[i], radius, cv::Scalar(0, 255, 255), thickness_circle);
+				corners_number.push_back(corners_prev.size());
+				std::cout << "corners = " << corners_prev.size() << std::endl;
+				flag = false;
 			}
+			else {
+				vector<cv::Point2f> corners_good;
+				cv::calcOpticalFlowPyrLK(frame_gray_prev, frame_gray, corners_prev, corners, status, err, cv::Size(21, 21), 3, criteria);
+				
+				//select and vizual
+				int radius = 10;
+				int thickness_circle = 5;
+				
+				for (uint i = 0; i < corners_prev.size(); i++)
+				{
+					if (!status[i]) {
+						corners_good.push_back(corners[i]);
+						cv::circle(frame, corners[i], radius, cv::Scalar(0, 255, 255), thickness_circle);
+					}
+				}
+				
+				//upd
+				frame_gray_prev = frame_gray.clone();
+				corners_prev = corners_good;
 
-			corners_number.push_back(corners.size());
+				std::cout << "corners = " << corners.size() << std::endl;
+				corners_number.push_back(corners.size());
+			}
+			
 
-			cv::imshow("cropped", frame_roi);
+			//std::cout << "corners = " << corners.size() << std::endl;
+
+			
+
+			//cv::imshow("cropped", frame_roi);
 			cv::imshow("source", frame);
-			//cv::imshow("Canny", frame_Canny);
+			//cv::imshow("Canny", frame_gray_prev);
 
 			writer << frame;
 			g_run -= 1;
