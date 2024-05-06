@@ -84,7 +84,7 @@ double source_video() {
 		(int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT)
 	);
 	cv::VideoWriter writer;
-	writer.open("video_taks5.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
+	writer.open("video_taks5_2.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
 	int frames = (int)g_cap.get(cv::CAP_PROP_FRAME_COUNT);
 	int tmpw = (int)g_cap.get(cv::CAP_PROP_FRAME_WIDTH);
 	int tmph = (int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT);
@@ -109,7 +109,7 @@ double source_video() {
 
 	//cv::Mat corners;
 	int maxCorners = 1000;
-	double qualityLevel = 0.01;
+	double qualityLevel = 0.05;
 	double minDistance = 3;
 	int blockSize = 3;
 
@@ -167,12 +167,12 @@ double source_video() {
 
 			cv::Rect roi(0, prev_point_up, 1599, prev_point_down - prev_point_up);//x0, y0, width, height
 
-
+			cv::equalizeHist(frame_gray, frame_gray);
 			frame_roi = frame_gray(roi);
 			if (flag) {
 				frame_gray_prev = frame_gray.clone();
-				cv::equalizeHist(frame_roi, frame_roi);
-				cv::goodFeaturesToTrack(frame_roi, corners_prev, maxCorners, qualityLevel, minDistance, cv::noArray(), blockSize);
+				//cv::equalizeHist(frame_roi, frame_roi);
+				cv::goodFeaturesToTrack(frame_roi, corners_prev, maxCorners, qualityLevel, minDistance, cv::noArray(), blockSize, true);
 				int radius = 10;
 				int thickness_circle = 5;
 				for (size_t i = 0; i < corners_prev.size(); i++)
@@ -193,9 +193,9 @@ double source_video() {
 				int radius = 10;
 				int thickness_circle = 5;
 				
-				for (uint i = 0; i < corners_prev.size(); i++)
+				for (uint i = 0; i < status.size(); i++)
 				{
-					if (!status[i]) {
+					if (status[i] && (corners[i].x < 1599 && corners[i].x > 0 && corners[i].y > prev_point_up && corners[i].y < prev_point_down)) {
 						corners_good.push_back(corners[i]);
 						cv::circle(frame, corners[i], radius, cv::Scalar(0, 255, 255), thickness_circle);
 					}
@@ -206,6 +206,7 @@ double source_video() {
 				corners_prev = corners_good;
 
 				std::cout << "corners = " << corners.size() << std::endl;
+
 				corners_number.push_back(corners.size());
 			}
 			
@@ -241,7 +242,7 @@ int main(int argc, char** argv) {
 	source_video();
 
 	std::ofstream out;
-	out.open("task5.txt");
+	out.open("task5_2.txt");
 	if (out.is_open())
 	{
 		//out << "Frame number, number of corners" << std::endl;
