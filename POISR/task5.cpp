@@ -84,7 +84,7 @@ double source_video() {
 		(int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT)
 	);
 	cv::VideoWriter writer;
-	writer.open("video_taks5_lines.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
+	writer.open("video_task5_circles_2.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
 	int frames = (int)g_cap.get(cv::CAP_PROP_FRAME_COUNT);
 	int tmpw = (int)g_cap.get(cv::CAP_PROP_FRAME_WIDTH);
 	int tmph = (int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT);
@@ -172,6 +172,7 @@ double source_video() {
 
 			cv::equalizeHist(frame_gray, frame_gray);
 			frame_roi = frame_gray(roi);
+			if (count >=320) {
 			if (flag) {
 				frame_gray_prev = frame_gray.clone();
 				//cv::equalizeHist(frame_roi, frame_roi);
@@ -183,7 +184,7 @@ double source_video() {
 				{
 					corners_prev[i].y += prev_point_up;
 					trajects[i].push_back(corners_prev[i]);
-					//cv::circle(frame, corners_prev[i], radius, cv::Scalar(0, 255, 255), thickness_circle);
+					cv::circle(frame, corners_prev[i], radius, cv::Scalar(0, 255, 255), thickness_circle);
 				}
 				//trajects.push_back(corners_prev);
 				corners_number.push_back(corners_prev.size());
@@ -210,12 +211,12 @@ double source_video() {
 
 						trajects[i].push_back(corners[i]);
 						trajects_temp.push_back(trajects[i]);
-						//cv::line(frame, corners[i], corners_prev[i], cv::Scalar( 255,0,0), 1);
-						//cv::circle(frame, corners[i], radius, cv::Scalar(0, 255, 255), thickness_circle);
 						
-						for (int j = 1; j < trajects[i].size(); j++) {
+						cv::circle(frame, corners[i], radius, cv::Scalar(0, 255, 255), thickness_circle);
+						
+						/*for (int j = 1; j < trajects[i].size(); j++) {
 							cv::line(frame, trajects[i][j-1], trajects[i][j], cv::Scalar(255, 255, 0), 3);
-						}
+						}*/
 					}
 
 					
@@ -246,6 +247,7 @@ double source_video() {
 
 			writer << frame;
 			g_run -= 1;
+			}
 		}
 		char c = (char)cv::waitKey(10);
 		if (c == 's')
@@ -265,7 +267,7 @@ double source_video() {
 
 int main(int argc, char** argv) {
 	source_video();
-	/*
+	
 	std::ofstream out;
 	out.open("task5_2.txt");
 	if (out.is_open())
@@ -273,10 +275,10 @@ int main(int argc, char** argv) {
 		//out << "Frame number, number of corners" << std::endl;
 		for (int i = 0; i < corners_number.size(); i++)
 		{
-			out << i << " " << corners_number[i] << std::endl;
+			out << 320+i << " " << corners_number[i] << std::endl;
 		}
 
 	}
 	out.close();
-	std::cout << "File has been written" << std::endl;*/
+	std::cout << "File has been written" << std::endl;
 }
