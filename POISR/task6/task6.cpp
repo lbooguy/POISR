@@ -74,6 +74,18 @@ double source_video() {
 
 
 	bool flag = 1;
+
+	//roi params
+	int X0 = 200;
+	int Y0 = 270;
+	int width = 1200;
+	int height = 500;
+
+	cv::Point c1(X0, Y0), c2(X0 + width, Y0); //up line
+	cv::Point c3(X0, Y0 + height), c4(X0 + width, Y0 + height);//down line
+	cv::Point c5(X0, Y0), c6(X0, Y0 + height); // left line
+	cv::Point c7(X0 + width, Y0), c8(X0 + width, Y0 + height); // right line
+
 	for (;;) {
 		if (g_run != 0) {
 			count++;
@@ -87,17 +99,8 @@ double source_video() {
 			cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);
 			cv::Canny(frame_gray, frame_Canny, 130, 230, 3, true);
 
-			std::cout << "framefaesf" << frame.size() << std::endl;
-			//roi params
-			int X0 = 0;
-			int Y0 = 0;
-			int X = 0;
-			int Y = 0;
-
-			cv::Point c1(0, prev_point_down), c2(1600, prev_point_down);
-			cv::Point c3(0, prev_point_up), c4(1600, prev_point_up);
-			cv::Point c5(0, prev_point_up), c6(0, prev_point_down);
-			cv::Point c7(1599, prev_point_up), c8(1599, prev_point_down);
+			//std::cout << "framefaesf" << frame.size() << std::endl;
+			
 
 			int thickness = 2;
 			cv::line(frame, c1, c2, cv::Scalar(0, 255, 0),
@@ -109,9 +112,8 @@ double source_video() {
 			cv::line(frame, c7, c8, cv::Scalar(0, 255, 0),
 				thickness, cv::LINE_8);
 
-			cv::Rect roi(0, prev_point_up, 1599, prev_point_down - prev_point_up);//x0, y0, width, height
+			cv::Rect roi(X0, Y0, width, height);//x0, y0, width, height
 
-			cv::equalizeHist(frame_gray, frame_gray);
 			frame_roi = frame_gray(roi);
 
 			if (flag) {
@@ -121,7 +123,8 @@ double source_video() {
 				int thickness_circle = 5;
 				for (size_t i = 0; i < corners_prev.size(); i++)
 				{
-					corners_prev[i].y += prev_point_up;
+					corners_prev[i].y += Y0;
+					corners_prev[i].x += X0;
 					trajects[i].push_back(corners_prev[i]);
 					cv::circle(frame, corners_prev[i], radius, cv::Scalar(0, 255, 255), thickness_circle);
 				}
@@ -133,7 +136,6 @@ double source_video() {
 			else {
 				vector<cv::Point2f> corners_good;
 				cv::calcOpticalFlowPyrLK(frame_gray_prev, frame_gray, corners_prev, corners, status, err, cv::Size(21, 21), 3, criteria);
-				//trajects.push_back(corners);
 
 				//select and vizual
 				int radius = 10;
@@ -145,7 +147,7 @@ double source_video() {
 				//trajects_temp = trajects;
 				for (uint i = 0; i < status.size(); i++)
 				{
-					if (status[i] && (corners[i].x < 1599 && corners[i].x > 0 && corners[i].y > prev_point_up && corners[i].y < prev_point_down)) {
+					if (status[i] && (corners[i].x < X0 + width && corners[i].x > X0 && corners[i].y > Y0 && corners[i].y < Y0 + height)) {
 						corners_good.push_back(corners[i]);
 
 						trajects[i].push_back(corners[i]);
