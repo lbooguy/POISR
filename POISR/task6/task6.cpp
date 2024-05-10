@@ -14,7 +14,7 @@ vector<int> corners_number;
 void onTrackbarSlide(int pos, void*) {
 	g_cap.set(cv::CAP_PROP_POS_FRAMES, pos);
 	if (!g_dontset)
-		g_run = 1;
+		g_run = -1;
 	g_dontset = 0;
 }
 
@@ -33,7 +33,7 @@ double source_video() {
 		(int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT)
 	);
 	cv::VideoWriter writer;
-	writer.open("task6/video_task6_circles_1.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
+	writer.open("task6/video_task6_circles_2.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
 	int frames = (int)g_cap.get(cv::CAP_PROP_FRAME_COUNT);
 	int tmpw = (int)g_cap.get(cv::CAP_PROP_FRAME_WIDTH);
 	int tmph = (int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT);
@@ -70,7 +70,7 @@ double source_video() {
 	vector<float> err;
 	cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT)+(cv::TermCriteria::EPS), 10, 0.3);
 
-	vector<vector<cv::Point2f>> trajects(maxCorners);
+	vector<vector<cv::Point2f>> trajects;
 
 
 	bool flag = 1;
@@ -85,23 +85,20 @@ double source_video() {
 	cv::Point c3(X0, Y0 + height), c4(X0 + width, Y0 + height);//down line
 	cv::Point c5(X0, Y0), c6(X0, Y0 + height); // left line
 	cv::Point c7(X0 + width, Y0), c8(X0 + width, Y0 + height); // right line
-
 	for (;;) {
 		if (g_run != 0) {
 			count++;
 			g_cap >> frame; if (frame.empty()) break;
+			
+			
 
 			int current_pos = (int)g_cap.get(cv::CAP_PROP_POS_FRAMES);
 			g_dontset = 1;
 			cv::setTrackbarPos("Position", "source", current_pos);
 
-
+			if (count >= 2000){
 			cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);
-			cv::Canny(frame_gray, frame_Canny, 130, 230, 3, true);
-
-			//std::cout << "framefaesf" << frame.size() << std::endl;
 			
-
 			int thickness = 2;
 			cv::line(frame, c1, c2, cv::Scalar(0, 255, 0),
 				thickness, cv::LINE_8);
@@ -115,10 +112,14 @@ double source_video() {
 			cv::Rect roi(X0, Y0, width, height);//x0, y0, width, height
 
 			frame_roi = frame_gray(roi);
-
-			if (flag) {
+			
+			if (corners_prev.size() <= 2) {
 				frame_gray_prev = frame_gray.clone();
+				corners.clear();
+				corners_prev.clear();
+				trajects.clear();
 				cv::goodFeaturesToTrack(frame_roi, corners_prev, maxCorners, qualityLevel, minDistance, cv::noArray(), blockSize, true);
+				trajects.resize(corners_prev.size());
 				int radius = 10;
 				int thickness_circle = 5;
 				for (size_t i = 0; i < corners_prev.size(); i++)
@@ -130,7 +131,7 @@ double source_video() {
 				}
 				//trajects.push_back(corners_prev);
 				corners_number.push_back(corners_prev.size());
-				std::cout << "corners = " << corners_prev.size() << std::endl;
+				//std::cout << "corners = " << corners_prev.size() << std::endl;
 				flag = false;
 			}
 			else {
@@ -140,8 +141,6 @@ double source_video() {
 				//select and vizual
 				int radius = 10;
 				int thickness_circle = 5;
-				auto iter = trajects.cbegin();
-				auto iter_end = trajects.cend();
 
 				vector<vector<cv::Point2f>> trajects_temp;
 				//trajects_temp = trajects;
@@ -154,8 +153,8 @@ double source_video() {
 						trajects_temp.push_back(trajects[i]);
 
 						cv::circle(frame, corners[i], radius, cv::Scalar(0, 255, 255), thickness_circle);
-
-						/*for (int j = 1; j < trajects[i].size(); j++) {
+						/*
+						for (int j = 1; j < trajects[i].size(); j++) {
 							cv::line(frame, trajects[i][j-1], trajects[i][j], cv::Scalar(255, 255, 0), 3);
 						}*/
 					}
@@ -170,7 +169,7 @@ double source_video() {
 				frame_gray_prev = frame_gray.clone();
 				corners_prev = corners_good;
 
-				std::cout << "corners = " << corners.size() << std::endl;
+				//std::cout << "corners = " << corners.size() << std::endl;
 
 				corners_number.push_back(corners.size());
 			}
@@ -178,6 +177,7 @@ double source_video() {
 			cv::imshow("source", frame);
 
 			writer << frame;
+			}
 			g_run -= 1;
 			
 		}
@@ -201,7 +201,7 @@ int main(int argc, char** argv) {
 	source_video();
 
 	std::ofstream out;
-	out.open("task6/task6_1.txt");
+	out.open("task6/taskasdasd.txt");
 	if (out.is_open())
 	{
 		for (int i = 0; i < corners_number.size(); i++)
