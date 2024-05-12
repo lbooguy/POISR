@@ -66,12 +66,14 @@ double source_video() {
 	cv::Mat descriptors_prev;
 	std::vector<cv::KeyPoint> keypoints;
 	std::vector<cv::KeyPoint> keypoints_match;
-	std::vector< std::vector<cv::DMatch> > keyp_match;
+	//std::vector< std::vector<cv::DMatch> > keyp_match;
 	cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::FLANNBASED);
 
 	g_cap >> frame;
 	siftPtr->detectAndCompute(frame, cv::noArray(), keypoints, descriptors_prev);
 	cv::drawKeypoints(frame, keypoints, frame, cv::Scalar(0, 0, 255), cv::DrawMatchesFlags::DEFAULT);
+	cv::imshow("source", frame);
+	writer << frame;
 
 	for (;;) {
 		if (g_run != 0) {
@@ -86,24 +88,40 @@ double source_video() {
 
 
 			siftPtr->detectAndCompute(frame, cv::noArray(), keypoints, descriptors);
+			std::vector< std::vector<cv::DMatch> > keyp_match;
+			matcher->knnMatch(descriptors_prev, descriptors, keyp_match, 2);
 
-			matcher->knnMatch(descriptors, descriptors_prev, keyp_match, 2);
-
+			//std::cout << "keyp_match.size() = " << keyp_match.size() << std::endl;
+			std::vector<cv::DMatch>  keyp_match_good;
+			float ratio = 0.8;
 			for (size_t i = 0; i < keyp_match.size(); i++) {
-				//keypoints_match.push_back(keyp_match[i][0]);
+				if (keyp_match[i][0].distance < ratio * keyp_match[i][1].distance) {
+					keyp_match_good.push_back(keyp_match[i][0]);
+				}
 			}
 			
+			std::vector<cv::KeyPoint> traceable_keypoints;
+			std::set<int> idx_monitored;
+			for (size_t i = 0; i < keyp_match_good.size(); i++) {
+				traceable_keypoints.push_back(keypoints[keyp_match_good[i].trainIdx]);
+				idx_monitored.insert(keyp_match_good[i].trainIdx);
+			}
+			cv::drawKeypoints(frame, traceable_keypoints, frame, cv::Scalar(0, 255, 0), cv::DrawMatchesFlags::DEFAULT);
+	
+			std::vector<cv::KeyPoint> untraceable_keypoints;
+			for (size_t i = 0; i < keypoints.size(); i++) {
+				if (!idx_monitored.count(i)) {
+					untraceable_keypoints.push_back(keypoints[i]);
+				}
+			}
+			cv::drawKeypoints(frame, untraceable_keypoints, frame, cv::Scalar(0,0,255),cv::DrawMatchesFlags::DEFAULT);
 
-			
-			//siftPtr->detectAndCompute(frame, cv::noArray(), keypoints, descriptors);
-			cv::drawKeypoints(frame, keypoints, frame, cv::Scalar(0,0,255),cv::DrawMatchesFlags::DEFAULT);
 
-
-			
+			descriptors_prev = descriptors.clone();
 
 			cv::imshow("source", frame);
 
-			//writer << frame;
+			writer << frame;
 			g_run -= 1;
 
 		}
