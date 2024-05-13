@@ -9,7 +9,7 @@ using namespace std;
 int g_slider_position = 0;
 int g_run = 1, g_dontset = 0;
 cv::VideoCapture g_cap;
-vector<int> corners_number;
+//vector<int> corners_number;
 
 void onTrackbarSlide(int pos, void*) {
 	g_cap.set(cv::CAP_PROP_POS_FRAMES, pos);
@@ -25,7 +25,7 @@ double source_video() {
 
 	double total_time = 0;
 	int count = 0;
-	g_cap.open("C:/Users/USER/Videos/video.mp4");
+	g_cap.open("C:/Users/USER/Videos/video2.mp4");
 	//g_cap.open(0);
 	double fps = g_cap.get(cv::CAP_PROP_FPS);
 	cv::Size size(
@@ -33,7 +33,7 @@ double source_video() {
 		(int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT)
 	);
 	cv::VideoWriter writer;
-	writer.open("task7/video_task7_video1.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
+	writer.open("task7/video_task7_video2.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
 	int frames = (int)g_cap.get(cv::CAP_PROP_FRAME_COUNT);
 	int tmpw = (int)g_cap.get(cv::CAP_PROP_FRAME_WIDTH);
 	int tmph = (int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT);
@@ -48,6 +48,13 @@ double source_video() {
 	cv::Mat frame_roi_prev;
 	cv::Mat frame_gray_prev;
 	
+	std::ofstream out;
+
+	out.open("task7/task_video2.txt");
+	if (out.is_open())
+	{
+		out << "Frame number, Numbers of detected features, Numbers of matched features, detectAndCompute time ms, knnMatch time ms" << std::endl;
+	}
 
 	//roi params
 	int X0 = 200;
@@ -70,28 +77,47 @@ double source_video() {
 	cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::FLANNBASED);
 
 	g_cap >> frame;
+	count++;
 	siftPtr->detectAndCompute(frame, cv::noArray(), keypoints, descriptors_prev);
 	cv::drawKeypoints(frame, keypoints, frame, cv::Scalar(0, 0, 255), cv::DrawMatchesFlags::DEFAULT);
-	cv::imshow("source", frame);
+	//cv::imshow("source", frame);
 	writer << frame;
+
+	
 
 	for (;;) {
 		if (g_run != 0) {
 			count++;
 			g_cap >> frame; if (frame.empty()) break;
 
-
+			//out write 1
+			out << count - 1 << " ";
 
 			int current_pos = (int)g_cap.get(cv::CAP_PROP_POS_FRAMES);
 			g_dontset = 1;
 			cv::setTrackbarPos("Position", "source", current_pos);
 
-
+			auto begin_dAC = std::chrono::steady_clock::now();
 			siftPtr->detectAndCompute(frame, cv::noArray(), keypoints, descriptors);
-			std::vector< std::vector<cv::DMatch> > keyp_match;
-			matcher->knnMatch(descriptors_prev, descriptors, keyp_match, 2);
+			auto end_dAC = std::chrono::steady_clock::now();
+			auto detectAndCompute_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_dAC - begin_dAC);
+			
 
-			//std::cout << "keyp_match.size() = " << keyp_match.size() << std::endl;
+			std::vector< std::vector<cv::DMatch> > keyp_match;
+			auto begin_kM = std::chrono::steady_clock::now();
+			matcher->knnMatch(descriptors_prev, descriptors, keyp_match, 2);
+			auto end_kM = std::chrono::steady_clock::now();
+			auto knnMatch_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_kM - begin_kM);
+			
+			//out write 2
+			out << keypoints.size() << " ";
+			//out write 3
+			out <<keyp_match.size()<< " ";
+			//out write 4
+			out << detectAndCompute_time.count() << " ";
+			//out write 5
+			out << knnMatch_time.count() << std::endl;
+
 			std::vector<cv::DMatch>  keyp_match_good;
 			float ratio = 0.8;
 			for (size_t i = 0; i < keyp_match.size(); i++) {
@@ -138,6 +164,7 @@ double source_video() {
 			return total_time / count;
 	}
 	//g_cap.release();
+	out.close();
 	return total_time / count;
 }
 
