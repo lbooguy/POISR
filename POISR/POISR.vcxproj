@@ -153,7 +153,12 @@
     <ClCompile Include="task6\task6.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="task7\task7.cpp" />
+    <ClCompile Include="task7\task7.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="task8\task8_ORB.cpp" />
+    <ClCompile Include="task8\task8_SIFT.cpp" />
+    <ClCompile Include="task8\task8_SURF.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
