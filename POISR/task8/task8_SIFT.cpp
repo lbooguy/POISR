@@ -25,7 +25,7 @@ double source_video() {
 
 	double total_time = 0;
 	int count = 0;
-	g_cap.open("C:/Users/USER/Videos/video2.mp4");
+	g_cap.open("C:/Users/USER/Videos/video3.mp4");
 	//g_cap.open(0);
 	double fps = g_cap.get(cv::CAP_PROP_FPS);
 	cv::Size size(
@@ -33,7 +33,7 @@ double source_video() {
 		(int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT)
 	);
 	cv::VideoWriter writer;
-	writer.open("task7/video_task7_video2.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
+	writer.open("task8/video_task8_SIFT.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
 	int frames = (int)g_cap.get(cv::CAP_PROP_FRAME_COUNT);
 	int tmpw = (int)g_cap.get(cv::CAP_PROP_FRAME_WIDTH);
 	int tmph = (int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT);
@@ -50,7 +50,7 @@ double source_video() {
 
 	std::ofstream out;
 
-	out.open("task7/task_video2.txt");
+	out.open("task8/task8_SIFT.txt");
 	if (out.is_open())
 	{
 		out << "Frame number, Numbers of detected features, Numbers of matched features, detectAndCompute time ms, knnMatch time ms" << std::endl;
@@ -119,7 +119,7 @@ double source_video() {
 			out << knnMatch_time.count() << std::endl;
 
 			std::vector<cv::DMatch>  keyp_match_good;
-			float ratio = 0.8;
+			float ratio = 0.7;
 			for (size_t i = 0; i < keyp_match.size(); i++) {
 				if (keyp_match[i][0].distance < ratio * keyp_match[i][1].distance) {
 					keyp_match_good.push_back(keyp_match[i][0]);
@@ -170,19 +170,4 @@ double source_video() {
 
 int main(int argc, char** argv) {
 	source_video();
-
-	/*
-	std::ofstream out;
-
-	out.open("task7/taskasdasd.txt");
-	if (out.is_open())
-	{
-		for (int i = 0; i < corners_number.size(); i++)
-		{
-			out << i << " " << corners_number[i] << std::endl;
-		}
-
-	}
-	out.close();
-	std::cout << "File has been written" << std::endl;*/
 }
