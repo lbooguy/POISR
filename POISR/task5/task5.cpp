@@ -199,8 +199,6 @@ double source_video() {
 				//select and vizual
 				int radius = 10;
 				int thickness_circle = 5;
-				auto iter = trajects.cbegin();
-				auto iter_end = trajects.cend();
 
 				vector<vector<cv::Point2f>> trajects_temp;
 				//trajects_temp = trajects;
