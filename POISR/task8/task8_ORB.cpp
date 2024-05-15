@@ -73,7 +73,7 @@ double source_video() {
 	std::vector<cv::KeyPoint> keypoints;
 	std::vector<cv::KeyPoint> keypoints_match;
 	//std::vector< std::vector<cv::DMatch> > keyp_match;
-	int nfeatures = 25000;
+	int nfeatures = 1000;
 	float scaleFactor = 1.2f;
 	int nlevels = 8;
 	int edgeThreshold = 31;
@@ -83,7 +83,10 @@ double source_video() {
 	int patchSize = 31;
 	int fastThreshold = 20;
 	cv::Ptr<cv::ORB> orbPtr = cv::ORB::create(nfeatures);
-	cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::FLANNBASED);
+	//cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::FLANNBASED);
+	//cv::Ptr <cv::FlannBasedMatcher> matcher = cv::FlannBasedMatcher::create();
+	//cv::Ptr<cv::FlannBasedMatcher> matcher = cv::FlannBasedMatcher::create();
+	cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::BRUTEFORCE_HAMMING);
 
 	g_cap >> frame;
 	count++;
@@ -118,14 +121,7 @@ double source_video() {
 			auto end_kM = std::chrono::steady_clock::now();
 			auto knnMatch_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_kM - begin_kM);
 
-			//out write 2
-			out << keypoints.size() << " ";
-			//out write 3
-			out << keyp_match.size() << " ";
-			//out write 4
-			out << detectAndCompute_time.count() << " ";
-			//out write 5
-			out << knnMatch_time.count() << std::endl;
+			
 
 			std::vector<cv::DMatch>  keyp_match_good;
 			float ratio = 0.7;
@@ -134,6 +130,15 @@ double source_video() {
 					keyp_match_good.push_back(keyp_match[i][0]);
 				}
 			}
+
+			//out write 2
+			out << keypoints.size() << " ";
+			//out write 3
+			out << keyp_match_good.size() << " ";
+			//out write 4
+			out << detectAndCompute_time.count() << " ";
+			//out write 5
+			out << knnMatch_time.count() << std::endl;
 
 			std::vector<cv::KeyPoint> traceable_keypoints;
 			std::set<int> idx_monitored;

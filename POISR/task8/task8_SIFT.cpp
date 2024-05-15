@@ -68,7 +68,7 @@ double source_video() {
 	cv::Point c7(X0 + width, Y0), c8(X0 + width, Y0 + height); // right line
 
 	//SIFT
-	cv::Ptr<cv::SIFT> siftPtr = cv::SIFT::create();
+	cv::Ptr<cv::SIFT> siftPtr = cv::SIFT::create(1000);
 	cv::Mat descriptors;
 	cv::Mat descriptors_prev;
 	std::vector<cv::KeyPoint> keypoints;
@@ -109,14 +109,7 @@ double source_video() {
 			auto end_kM = std::chrono::steady_clock::now();
 			auto knnMatch_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_kM - begin_kM);
 
-			//out write 2
-			out << keypoints.size() << " ";
-			//out write 3
-			out << keyp_match.size() << " ";
-			//out write 4
-			out << detectAndCompute_time.count() << " ";
-			//out write 5
-			out << knnMatch_time.count() << std::endl;
+			
 
 			std::vector<cv::DMatch>  keyp_match_good;
 			float ratio = 0.7;
@@ -125,6 +118,14 @@ double source_video() {
 					keyp_match_good.push_back(keyp_match[i][0]);
 				}
 			}
+			//out write 2
+			out << keypoints.size() << " ";
+			//out write 3
+			out << keyp_match_good.size() << " ";
+			//out write 4
+			out << detectAndCompute_time.count() << " ";
+			//out write 5
+			out << knnMatch_time.count() << std::endl;
 
 			std::vector<cv::KeyPoint> traceable_keypoints;
 			std::set<int> idx_monitored;
