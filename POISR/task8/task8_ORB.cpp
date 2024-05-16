@@ -33,7 +33,7 @@ double source_video() {
 		(int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT)
 	);
 	cv::VideoWriter writer;
-	writer.open("task8/video_task8_ORB.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
+	writer.open("task8/video_task8_ORB1.mp4", cv::VideoWriter::fourcc('H', '2', '6', '4'), fps, size);
 	int frames = (int)g_cap.get(cv::CAP_PROP_FRAME_COUNT);
 	int tmpw = (int)g_cap.get(cv::CAP_PROP_FRAME_WIDTH);
 	int tmph = (int)g_cap.get(cv::CAP_PROP_FRAME_HEIGHT);
@@ -50,7 +50,7 @@ double source_video() {
 
 	std::ofstream out;
 
-	out.open("task8/task8_ORB.txt");
+	out.open("task8/task8_ORB1.txt");
 	if (out.is_open())
 	{
 		out << "Frame number, Numbers of detected features, Numbers of matched features, detectAndCompute time ms, knnMatch time ms" << std::endl;
@@ -91,7 +91,7 @@ double source_video() {
 	g_cap >> frame;
 	count++;
 	orbPtr->detectAndCompute(frame, cv::noArray(), keypoints, descriptors_prev);
-	cv::drawKeypoints(frame, keypoints, frame, cv::Scalar(0, 0, 255), cv::DrawMatchesFlags::DEFAULT);
+	cv::drawKeypoints(frame, keypoints, frame, cv::Scalar(0, 0, 255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 	//cv::imshow("source", frame);
 	writer << frame;
 
@@ -177,6 +177,7 @@ double source_video() {
 		if (c == 27)
 			return total_time / count;
 	}
+
 	//g_cap.release();
 	out.close();
 	return total_time / count;
