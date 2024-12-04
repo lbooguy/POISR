@@ -43,7 +43,6 @@ void flowToColor(const cv::Mat& flow, cv::Mat& color) {
     cvtColor(hsv8, color, cv::COLOR_HSV2BGR);
 }
 
-
 void drawOpticalFlow(const Mat& flow, Mat& output, int step = 20) {
     output = Mat::zeros(flow.size(), CV_8UC3);
     for (int y = 0; y < flow.rows; y += step) {
@@ -55,7 +54,7 @@ void drawOpticalFlow(const Mat& flow, Mat& output, int step = 20) {
         }
     }
 }
-}
+}// namespace cv
 static void get_frame(const string in_path, const string out_vector_path, const string out_color_path, const string out_txt_path, Params& params) {
     cv::VideoCapture cap;
     cap.open(in_path);
@@ -79,7 +78,7 @@ static void get_frame(const string in_path, const string out_vector_path, const 
 
     ofstream timingFile(out_txt_path);
 
-    //namedWindow("Src", cv::WINDOW_NORMAL);
+    namedWindow("Src", cv::WINDOW_NORMAL);
     cv::Mat frame, frame_prev, flow, flow_color, flow_vectors;
     int frame_count = 0;
     cap >> frame_prev;
@@ -101,7 +100,7 @@ static void get_frame(const string in_path, const string out_vector_path, const 
         timingFile << frame_count << "\t" << elapsedTime << endl;
         flowToColor(flow, flow_color);
         writer_color << flow_color;
-        //imshow("Src", flow_color);
+        imshow("Src", flow_color);
 
         drawOpticalFlow(flow, flow_vectors);
         writer_vector << flow_vectors;
@@ -123,33 +122,33 @@ int main(int argc, char** argv) {
     string out_txt_path = "task2_6/road_params1.txt";
     get_frame(in_path, out_vector_path, out_color_path, out_txt_path, params1);
 
-    //out_vector_path = "task2_6/vector_road_params2.mp4";
-    //out_color_path = "task2_6/color_road_params2.mp4";
-    //out_txt_path = "task2_6/road_params2.txt";
-    //get_frame(in_path, out_vector_path, out_color_path, out_txt_path, params2);
+    out_vector_path = "task2_6/vector_road_params2.mp4";
+    out_color_path = "task2_6/color_road_params2.mp4";
+    out_txt_path = "task2_6/road_params2.txt";
+    get_frame(in_path, out_vector_path, out_color_path, out_txt_path, params2);
 
-    //out_vector_path = "task2_6/vector_road_params3.mp4";
-    //out_color_path = "task2_6/color_road_params3.mp4";
-    //out_txt_path = "task2_6/road_params3.txt";
-    //get_frame(in_path, out_vector_path, out_color_path, out_txt_path, params3);
-
-
-    //const string in_path = "task2_6/road.mp4";
-
-    //const string out_vector_path = "task2_6/vector_road_params1.mp4";
-    //const string out_color_path = "task2_6/color_road_params1.mp4";
-    //get_frame(in_path, out_vector_path, out_color_path, params1);
-
-    //const string out_vector_path = "task2_6/vector_road_params2.mp4";
-    //const string out_color_path = "task2_5/color_road_params2.mp4";
-    //get_frame(in_path, out_vector_path, out_color_path, params2);
-
-    //const string out_vector_path = "task2_6/vector_road_params3.mp4";
-    //const string out_color_path = "task2_5/color_road_params3.mp4";
-    //get_frame(in_path, out_vector_path, out_color_path, params3);
+    out_vector_path = "task2_6/vector_road_params3.mp4";
+    out_color_path = "task2_6/color_road_params3.mp4";
+    out_txt_path = "task2_6/road_params3.txt";
+    get_frame(in_path, out_vector_path, out_color_path, out_txt_path, params3);
 
 
 
+    in_path = "task2_6/surface.mp4";
 
+    out_vector_path = "task2_6/vector_surface_params1.mp4";
+    out_color_path = "task2_6/color_surface_params1.mp4";
+    out_txt_path = "task2_6/surface_params1.txt";
+    get_frame(in_path, out_vector_path, out_color_path, out_txt_path, params1);
+
+    out_vector_path = "task2_6/vector_surface_params2.mp4";
+    out_color_path = "task2_6/color_surface_params2.mp4";
+    out_txt_path = "task2_6/surface_params2.txt";
+    get_frame(in_path, out_vector_path, out_color_path, out_txt_path, params2);
+
+    out_vector_path = "task2_6/vector_surface_params3.mp4";
+    out_color_path = "task2_6/color_surface_params3.mp4";
+    out_txt_path = "task2_6/surface_params3.txt";
+    get_frame(in_path, out_vector_path, out_color_path, out_txt_path, params3);
 
 }
