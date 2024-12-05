@@ -42,6 +42,14 @@ static cv::Point3f operator*(const cv::Mat& a, const cv::Point3f& b)
     return cv::Point3f(number1, number2, number3);
 }
 
+static cv::Point3f operator*(const std::vector<vector<double>>& a, const cv::Point3f& b)
+{
+    double number1 = a[0][0] * b.x + a[0][1] * b.y + a[0][2] * b.z;
+    double number2 = a[1][0] * b.x + a[1][1] * b.y + a[1][2] * b.z;
+    //double number3 = a.at<double>(2, 0) * b.x + a.at<double>(2, 1) * b.y + a.at<double>(2, 2) * b.z;
+    double number3 = 0; //?
+    return cv::Point3f(number1, number2, number3);
+}
 static cv::Point2f operator-(const cv::Point3f& first_operand, const cv::Point3f& second_operand)
 {
     return cv::Point2f(first_operand.x - second_operand.x, first_operand.y - second_operand.y);
@@ -175,7 +183,9 @@ static float distance(cv::Point3f& point_1, cv::Point3f& point_2) {
 static float vector_lenght(cv::Point3f& vector) {
     return pow(pow(vector.x, 2) + pow(vector.y, 2), 0.5);// + pow(point_1.z - point_2.z, 2)
 }
-
+static float vector_lenght(const cv::Point2f& vector) {
+    return pow(pow(vector.x, 2) + pow(vector.y, 2), 0.5);// + pow(point_1.z - point_2.z, 2)
+}
 static void check_transform(cv::Mat& projective_transform, cv::Point2f point1, cv::Point2f point2) {
     cv::Point3f point_1 = projective_transform * cv::Point3f(point1.x, point1.y, 1);
     cv::Point3f point_2 = projective_transform * cv::Point3f(point2.x, point2.y, 1);
@@ -223,15 +233,14 @@ static void draw_lines(cv::Mat& frame, std::vector<std::vector<cv::KeyPoint>>& k
     }
 }
 
-static cv::Point2f averaging_vectors(std::vector<cv::Point3f>& vectors) {
-    cv::Point2f average_vector(0, 0);
+static cv::Point2d averaging_vectors(std::vector<cv::Point3f>& vectors) {
+    cv::Point2d average_vector(0, 0);
     int count = 0;
     for (size_t i = 0; i < vectors.size(); i++) {
-        if (vector_lenght(vectors[i]) > 0.05 && vector_lenght(vectors[i]) < 50) {
-            average_vector.x += vectors[i].x;
-            average_vector.y += vectors[i].y;
-            count++;
-        }
+        average_vector.x += vectors[i].x;
+        average_vector.y += vectors[i].y;
+        count++;
+  
     }
     average_vector.x /= count;
     average_vector.y /= count;
@@ -253,21 +262,32 @@ static int get_inliers_number(cv::Point2f& model_vector, std::vector<float>& off
     }
     return inliers_count;
 }
-
-
+namespace cv{
+void drawOpticalFlow(const Mat& flow, Mat& output, int step = 20) {
+    output = Mat::zeros(flow.size(), CV_8UC3);
+    for (int y = 0; y < flow.rows; y += step) {
+        for (int x = 0; x < flow.cols; x += step) {
+            const Point2f& vec = flow.at<Point2f>(y, x);
+            Point2f endpoint(x + vec.x, y + vec.y);
+            line(output, Point(x, y), endpoint, Scalar(0, 255, 0), 1);
+            circle(output, endpoint, 2, Scalar(0, 0, 255), -1);
+        }
+    }
+}
+}
 static void MatToVector(cv::Mat& mat, std::vector<cv::Point2f>& vector) {
     for (int i = 0; i < mat.rows; i++) {
         for (int j = 0; j < mat.cols; j++) {
-            if (i == 2047 and j == 2047) {
-                int k = 0;
+            
+            const cv::Point2f point = mat.at<cv::Point2f>(i, j);
+            if (point.x != 0 and point.y != 0 and vector_lenght(point) > 0.05) {
+                vector.push_back(point);
             }
-            const cv::Point2f& point = mat.at<cv::Point2f>(i, j);
-            vector.push_back(point);
         }
     }
 
 }
-static void apply_transform(string movement_video_path, cv::Mat& transform, string stats_txt_path, Params& params) {
+static void apply_transform(string movement_video_path, std::vector<vector<double>>& transform, string stats_txt_path, Params& params) {
     cv::VideoCapture cap;
     cap.open(movement_video_path);
 
@@ -293,13 +313,15 @@ static void apply_transform(string movement_video_path, cv::Mat& transform, stri
     cv::Mat frame, frame_prev, flow_mat;
     std::vector<cv::Point2f> flow;
 
-    cap >> frame_prev;
-    cv::cvtColor(frame_prev, frame_prev, cv::COLOR_BGR2GRAY);
-
     cv::Point2f trajectory(0, 0);
 
     while (true)
-    {
+    {   
+        if (frame_count == 0) {
+            cap >> frame;
+            cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
+            frame_prev = frame.clone();
+        }
         frame_count++;
         cap >> frame; if (frame.empty()) break;
         cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
@@ -309,18 +331,18 @@ static void apply_transform(string movement_video_path, cv::Mat& transform, stri
         cv::calcOpticalFlowFarneback(frame_prev, frame, flow_mat, params.pyrScale,
             params.levels, params.winsize, params.iterations, params.polyN,
             params.polySigma, params.flags);
+        frame_prev = frame.clone();
 
         MatToVector(flow_mat, flow);
+        //drawOpticalFlow(flow_mat, frame);
         //imshow("Movement", frame);
-
         std::vector<cv::Point3f> metric_flow;
-
         for (const auto& fl : flow) {       
             cv::Point3f metric_fl = transform * cv::Point3f(fl.x, fl.y, 1);
             metric_flow.push_back(metric_fl);
         }
-
-        cv::Point2f average_vector = averaging_vectors(metric_flow);
+        
+        cv::Point2d average_vector = averaging_vectors(metric_flow);
         trajectory.x += average_vector.x;
         trajectory.y += average_vector.y;
         auto end_TOTAL = std::chrono::steady_clock::now();
@@ -346,7 +368,7 @@ static void apply_transform(string movement_video_path, cv::Mat& transform, stri
             prev_average_vector_angle = average_vector_angle;
         }
 
-        frame_prev = frame.clone();
+        //frame_prev = frame.clone();
         if (cv::waitKey(30) == 27)  break;// 'esc'
     }
     stats.close();
@@ -357,12 +379,9 @@ int main(int argc, char** argv) {
     const string stats_txt_path = "task2_7/stats.txt";
     const string movement_video_path = "task2_7/Movement_01.mp4";
 
-    float matrix[] = {-1.100642098326805, 0.06525565846120168, 1137.186308938773,
-                      -0.003354742110148203, -2.253588178675616, 3545.491365823719,
-                       1.884591680671522e-05, -0.001283004573461808, 1 };
-
-    cv::Mat projective_transform = cv::Mat(3, 3, CV_32F, matrix);
-    
+    std::vector<vector<double>> projective_transform = { { -1.100642098326805, 0.06525565846120168, 1137.186308938773},
+                                                         {-0.003354742110148203, -2.253588178675616, 3545.491365823719 },
+                                                         {1.884591680671522e-05, -0.001283004573461808, 1 }};
     apply_transform(movement_video_path, projective_transform, stats_txt_path, params1);
 
 }
