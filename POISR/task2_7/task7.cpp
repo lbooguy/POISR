@@ -276,6 +276,7 @@ void drawOpticalFlow(const Mat& flow, Mat& output, int step = 20) {
 }
 }
 static void MatToVector(cv::Mat& mat, std::vector<cv::Point2f>& vector) {
+    vector.clear();
     for (int i = 0; i < mat.rows; i++) {
         for (int j = 0; j < mat.cols; j++) {
             
@@ -310,7 +311,7 @@ static void apply_transform(string movement_video_path, std::vector<vector<doubl
     std::ofstream stats;
     stats.open(stats_txt_path);
 
-    cv::Mat frame, frame_prev, flow_mat;
+    cv::Mat frame, frame_prev;
     std::vector<cv::Point2f> flow;
 
     cv::Point2f trajectory(0, 0);
@@ -327,7 +328,7 @@ static void apply_transform(string movement_video_path, std::vector<vector<doubl
         cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
 
         auto begin_TOTAL = std::chrono::steady_clock::now();
-
+        cv::Mat flow_mat;
         cv::calcOpticalFlowFarneback(frame_prev, frame, flow_mat, params.pyrScale,
             params.levels, params.winsize, params.iterations, params.polyN,
             params.polySigma, params.flags);
